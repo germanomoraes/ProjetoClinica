@@ -1,2 +1,1 @@
-# Projeto-Clinica-Odontol-gica
-projeto 
+# Projeto-Clinica-Odontológica
