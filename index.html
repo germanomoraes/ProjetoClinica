@@ -1,0 +1,757 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Codental</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { background: linear-gradient(180deg,#f7fbff,#f3f6fb); }
+    .card { background: white; border-radius: 12px; box-shadow: 0 8px 24px rgba(16,24,40,0.06); }
+    .logo-badge { width:44px;height:44px;border-radius:10px; display:flex;align-items:center;justify-content:center;color:white;font-weight:700; background:linear-gradient(90deg,#0B5CFF,#6C63FF); }
+    .muted { color:#6b7280; }
+    .tiny { font-size:12px;color:#94a3b8; }
+    .btn-ghost { background:transparent;border:1px solid #e6eefb;border-radius:8px;padding:8px 10px; }
+    .agenda-grid { display: grid; grid-template-columns: 80px repeat(7, minmax(120px, 1fr)); }
+    .agenda-header { background-color: #f7f9fc; }
+    .agenda-time { background-color: #f7f9fc; padding: 10px; border-right: 1px solid #e6eefb; }
+    .agenda-cell { min-height: 48px; border-bottom: 1px solid #e6eefb; border-right: 1px solid #e6eefb; position: relative; padding:6px; }
+    .agenda-event { position: absolute; top: 6px; left: 6px; right: 6px; padding: 8px; overflow: hidden; border-radius:6px; }
+    .chip { display:inline-block;padding:6px 8px;border-radius:999px;background:#f1f5f9;margin-right:6px;margin-bottom:6px;font-size:13px }
+    .chip .x{ margin-left:8px; cursor:pointer; color:#475569 }
+    .table-scroll { max-height:360px; overflow:auto; }
+    .search-input{ padding:10px;border-radius:8px;border:1px solid #e6eefb;width:100% }
+    .btn-primary { background:linear-gradient(90deg,#0B5CFF,#6C63FF); color:white; padding:8px 12px;border-radius:8px }
+    .btn-outline { background:white; border:1px solid #e6eefb; padding:8px 12px;border-radius:8px }
+    .icon-btn { padding:6px 8px;border-radius:8px;border:1px solid #eef3ff;background:#fff }
+    @media (max-width:900px){
+      .logo-badge{width:36px;height:36px}
+      .agenda-grid { grid-template-columns: 60px repeat(7, minmax(80px, 1fr)); }
+    }
+    /* small helpers */
+    .small-muted { color:#6b7280; font-size:13px }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <!-- React, ReactDOM, Babel -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+
+  <script type="text/babel">
+  const { useState, useEffect, useRef } = React;
+
+  /* Utilities */
+  function uid(){ return Math.random().toString(36).slice(2,9); }
+  function formatBR(v){ return 'R$ ' + (Number(v)||0).toFixed(2).replace('.',','); }
+  function parseISODate(iso){
+    if(!iso) return new Date();
+    if(iso instanceof Date) return new Date(iso.getFullYear(), iso.getMonth(), iso.getDate());
+    const m = String(iso).match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if(m){
+      const y = Number(m[1]), mo = Number(m[2])-1, d = Number(m[3]);
+      return new Date(y, mo, d);
+    }
+    const n = new Date(iso);
+    return new Date(n.getFullYear(), n.getMonth(), n.getDate());
+  }
+  function dateToISO(d){
+    const dt = (d instanceof Date) ? d : parseISODate(String(d));
+    return new Date(dt.getFullYear(), dt.getMonth(), dt.getDate()).toISOString().slice(0,10);
+  }
+  function addDays(d, n){ const x = parseISODate(d); x.setDate(x.getDate() + n); return x; }
+  function startOfWeek(isoOrDate){
+    const dt = parseISODate(isoOrDate);
+    const day = dt.getDay();
+    const diff = (day === 0 ? -6 : 1 - day);
+    const base = new Date(dt.getFullYear(), dt.getMonth(), dt.getDate());
+    base.setDate(base.getDate() + diff);
+    base.setHours(0,0,0,0);
+    return base;
+  }
+
+  /* Persistence & Default */
+  const STORAGE_KEY = 'codental_monolit_v1';
+  const DEFAULT_DB = {
+    users: [
+      { username: 'dentista1', password: '1234', role:'dentista', name:'Dr. Dentista 1' },
+      { username: 'dentista2', password: '1234', role:'dentista', name:'Dr. Dentista 2' },
+      { username: 'dentista3', password: '1234', role:'dentista', name:'Dr. Dentista 3' },
+      { username: 'secretaria', password: '1234', role:'secretaria', name:'Secretária' }
+    ],
+    patients: [
+      { id:'p1', nome:'João Silva', telefone:'11988880000', cpf: '000.000.000-00' }
+    ],
+    appointments: [
+      { id: 'a1', date: dateToISO(addDays(new Date(),0)), time:'09:00', patient:'João Silva', phone:'11988880000', treatment:'Limpeza', value:150, professional:'dentista1', paid:true, status:'concluido' }
+    ]
+  };
+
+  function loadDB(){
+    try{
+      const r = localStorage.getItem(STORAGE_KEY);
+      if(!r){ localStorage.setItem(STORAGE_KEY, JSON.stringify(DEFAULT_DB)); return JSON.parse(JSON.stringify(DEFAULT_DB)); }
+      return JSON.parse(r);
+    }catch(e){
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(DEFAULT_DB));
+      return JSON.parse(JSON.stringify(DEFAULT_DB));
+    }
+  }
+  function saveDB(db){ localStorage.setItem(STORAGE_KEY, JSON.stringify(db)); }
+
+  function getProfessionalName(username){
+    const store = loadDB();
+    const u = (store.users || []).find(x=>x.username===username);
+    return u ? u.name : username;
+  }
+
+  /* Router Hook */
+  function useHashRoute(initial='login'){
+    const [route,setRoute] = useState(()=> location.hash.replace('#','') || initial);
+    useEffect(()=>{ const onHash = ()=> setRoute(location.hash.replace('#','')||initial); window.addEventListener('hashchange', onHash); return ()=>window.removeEventListener('hashchange', onHash); }, []);
+    const navigate = (r) => { const clean = (r||'').toString().replace(/^#/,''); location.hash = clean; setRoute(clean); };
+    return [route, navigate];
+  }
+
+  /* App Root */
+  function App(){
+    const [db, setDb] = useState(loadDB());
+    const [route, navigate] = useHashRoute('login');
+    const [user, setUser] = useState(null);
+    const [loading, setLoading] = useState(false);
+
+    useEffect(()=> saveDB(db), [db]);
+
+    const login = ({username, password}) => {
+      setLoading(true);
+      setTimeout(()=>{
+        const u = (db.users || []).find(x=>x.username===username && x.password===password);
+        if(u){ setUser(u); navigate('dashboard'); } else alert('Usuário ou senha inválidos');
+        setLoading(false);
+      }, 300);
+    };
+    const logout = ()=> { if(confirm('Deseja sair?')){ setUser(null); navigate('login'); } };
+
+    const addAppointment = (ap) => setDb(prev => ({ ...prev, appointments: [...prev.appointments, { ...ap, id: uid() }] }));
+    const addPatient = (p) => setDb(prev => ({ ...prev, patients: [...prev.patients, { ...p, id: uid() }] }));
+    const updateAppointment = (id, patch) => setDb(prev => ({ ...prev, appointments: prev.appointments.map(a => a.id===id ? { ...a, ...patch } : a) }));
+    const removeAppointment = (id) => { if(!confirm('Confirmar exclusão?')) return; setDb(prev=>({ ...prev, appointments: prev.appointments.filter(a=>a.id!==id) })); };
+
+    const common = { db, user, addAppointment, addPatient, updateAppointment, removeAppointment, navigate };
+
+    if(!user && route !== 'login'){ navigate('login'); return null; }
+
+    return (
+      <div className="min-h-screen">
+        {user && <Topbar user={user} onLogout={logout} navigate={navigate} />}
+        <div className="max-w-6xl mx-auto px-6 py-6">
+          { route === 'login' && <LoginPage onLogin={login} loading={loading} /> }
+          { route === 'dashboard' && <DashboardPage {...common} /> }
+          { route === 'agenda' && <AgendaPage {...common} /> }
+          { route === 'pacientes' && <PacientesPage {...common} /> }
+          { route === 'financeiro' && <FinanceiroPage {...common} /> }
+          { route === 'relatorios' && <RelatoriosPage {...common} /> }
+        </div>
+      </div>
+    );
+  }
+
+  /* Topbar */
+  function Topbar({ user, onLogout, navigate }){
+    const initial = user && user.name ? user.name[0] : 'U';
+    return (
+      <header className="bg-white shadow sticky top-0 z-20">
+        <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="logo-badge">🦷</div>
+            <div>
+              <div className="font-bold text-lg">Codental</div>
+              <div className="tiny">Sistema de Gestão Odontológica</div>
+            </div>
+            <nav className="ml-6 hidden md:flex gap-4">
+              <a href="#dashboard" className="px-3 py-2 rounded hover:bg-gray-50">Dashboard</a>
+              <a href="#agenda" className="px-3 py-2 rounded hover:bg-gray-50">Agenda</a>
+              <a href="#pacientes" className="px-3 py-2 rounded hover:bg-gray-50">Pacientes</a>
+              <a href="#financeiro" className="px-3 py-2 rounded hover:bg-gray-50">Financeiro</a>
+              <a href="#relatorios" className="px-3 py-2 rounded hover:bg-gray-50">Relatórios</a>
+            </nav>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="hidden sm:flex items-center gap-3">
+              <button className="p-2 rounded hover:bg-gray-100">🔔</button>
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-indigo-500 text-white flex items-center justify-center">{initial}</div>
+                <div className="hidden lg:block text-sm">{user.name}</div>
+                <button onClick={onLogout} className="ml-2 py-1 px-3 border rounded text-sm hover:bg-gray-50">Sair</button>
+              </div>
+            </div>
+            <div className="md:hidden">
+              <button className="p-2" onClick={()=>navigate('dashboard')}>☰</button>
+            </div>
+          </div>
+        </div>
+      </header>
+    );
+  }
+
+  /* Login Page */
+  function LoginPage({ onLogin, loading }){
+    const [username,setUsername] = useState('dentista1');
+    const [password,setPassword] = useState('1234');
+    const submit = (e) => { e && e.preventDefault(); onLogin({ username, password }); };
+    return (
+      <div className="flex items-center justify-center min-h-[75vh]">
+        <div className="w-full max-w-md card p-8">
+          <div className="flex flex-col items-center">
+            <div className="logo-badge mb-4">🦷</div>
+            <h1 className="text-2xl font-bold">Codental</h1>
+            <p className="muted mb-6">Sistema de Gestão Odontológica</p>
+          </div>
+          <form onSubmit={submit} className="space-y-4">
+            <input value={username} onChange={e=>setUsername(e.target.value)} placeholder="usuário" className="w-full p-3 border rounded" />
+            <input value={password} onChange={e=>setPassword(e.target.value)} type="password" placeholder="senha" className="w-full p-3 border rounded" />
+            <div className="flex justify-between items-center">
+              <button type="submit" disabled={loading} className="py-2 px-4 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded">
+                {loading ? 'Entrando...' : 'Entrar no Sistema'}
+              </button>
+              <button type="button" className="btn-ghost" onClick={()=>{ setUsername('dentista1'); setPassword('1234'); }}></button>
+            </div>
+          </form>
+          <p className="tiny mt-4">Usuários de teste: dentista1 / dentista2 / dentista3 / secretaria (senha 1234)</p>
+        </div>
+      </div>
+    );
+  }
+
+  /* Dashboard */
+  function DashboardPage({ db, navigate }){
+    const appts = db.appointments || [];
+    const totalPatients = db.patients.length;
+    const todayISO = dateToISO(new Date());
+    const apptsToday = appts.filter(a => a.date === todayISO).length;
+    const revenue = appts.reduce((s,a)=>s + (Number(a.value)||0), 0);
+
+    return (
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold">Dashboard</h1>
+            <p className="muted">Visão geral e principais ações</p>
+          </div>
+          <div className="flex gap-3">
+            <button className="py-2 px-4 rounded bg-white border" onClick={()=>navigate('agenda')}>Ver Agenda</button>
+            <button className="py-2 px-4 rounded bg-gradient-to-r from-blue-500 to-indigo-600 text-white" onClick={()=>navigate('pacientes')}>Novo Paciente</button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <Card title="Total de Pacientes" value={totalPatients} />
+          <Card title="Agendamentos Hoje" value={apptsToday} />
+          <Card title="Consultas" value={appts.length} />
+          <Card title="Receita do Mês" value={formatBR(revenue)} />
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 card p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-semibold">Próximos Agendamentos</h2>
+              <button className="text-blue-600" onClick={()=>navigate('agenda')}>Ver todos →</button>
+            </div>
+
+            {appts.length===0 ? <div className="text-center muted py-8">Nenhum agendamento próximo</div> :
+              <div className="space-y-3">
+                {appts.slice(0,6).map(a => (
+                  <div key={a.id} className="p-3 border rounded flex justify-between items-center">
+                    <div>
+                      <div className="font-medium">{a.patient}</div>
+                      <div className="tiny">{a.date} • {a.time} • {getProfessionalName(a.professional)}</div>
+                    </div>
+                    <div className="text-sm">{formatBR(a.value)}</div>
+                  </div>
+                ))}
+              </div>
+            }
+          </div>
+
+          <div className="card p-6 space-y-3">
+            <h3 className="text-lg font-semibold">Ações Rápidas</h3>
+            <div className="grid grid-cols-2 gap-3">
+              <ActionBox title="Nova Agenda" onClick={()=>navigate('agenda')} />
+              <ActionBox title="Novo Paciente" onClick={()=>navigate('pacientes')} />
+              <ActionBox title="Relatórios" onClick={()=>navigate('relatorios')} />
+              <ActionBox title="Financeiro" onClick={()=>navigate('financeiro')} />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+  function Card({ title, value }){ return (<div className="card p-6"><div className="text-sm text-gray-500">{title}</div><div className="mt-2 font-bold text-2xl">{value}</div></div>); }
+  function ActionBox({ title, onClick }){ return (<button onClick={onClick} className="p-4 bg-white border rounded hover:shadow">{title}</button>); }
+
+  /* Agenda Page */
+  function generateTimeSlots(startHour = 7, endHour = 18, stepMinutes = 30){
+    const slots = [];
+    for(let m = startHour*60; m <= endHour*60; m += stepMinutes){
+      const hh = Math.floor(m/60);
+      const mm = m % 60;
+      slots.push(`${String(hh).padStart(2,'0')}:${String(mm).padStart(2,'0')}`);
+    }
+    return slots;
+  }
+
+  function AgendaPage({ db, addAppointment, updateAppointment, removeAppointment, navigate }){
+    const [showModal, setShowModal] = useState(false);
+    const [selectedAp, setSelectedAp] = useState(null);
+    const [selectedDate, setSelectedDate] = useState(dateToISO(new Date()));
+    const weekStart = startOfWeek(selectedDate);
+    const days = Array.from({length:7}).map((_,i) => addDays(weekStart, i));
+    const professionals = (db.users || []).filter(u=>u.role==='dentista').map(u=>u.username);
+
+    function openNew(date, time){
+      setSelectedAp({ date: date || dateToISO(new Date()), time: time || '09:00', patient:'', phone:'', treatment:'', value:0, professional: (professionals[0] || '') });
+      setShowModal(true);
+    }
+    function openEdit(ap){ setSelectedAp(ap); setShowModal(true); }
+
+    function prevWeek(){ setSelectedDate(dateToISO(addDays(weekStart, -7))); }
+    function nextWeek(){ setSelectedDate(dateToISO(addDays(weekStart, 7))); }
+    function goToday(){ setSelectedDate(dateToISO(new Date())); }
+
+    const timeSlots = generateTimeSlots(7, 18, 30); // 07:00 - 18:00 every 30min
+
+    return (
+      <div className="space-y-6">
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <h1 className="text-3xl font-bold">Agenda</h1>
+            <p className="muted">Visualização semanal</p>
+          </div>
+          <div className="flex gap-3 items-center">
+            <button className="btn-ghost text-sm" onClick={prevWeek}>‹ Semana Anterior</button>
+            <button className="btn-ghost text-sm" onClick={nextWeek}>Próxima Semana ›</button>
+            <button className="btn-outline text-sm" onClick={goToday}>Hoje</button>
+            <button className="py-2 px-4 rounded bg-gradient-to-r from-blue-500 to-indigo-600 text-white" onClick={()=>openNew(dateToISO(new Date()), '09:00')}>+ Novo Agendamento</button>
+          </div>
+        </div>
+
+        <div className="flex gap-4">
+          <div className="w-1/4 min-w-[220px] space-y-4 sidebar">
+            <MiniCalendar date={parseISODate(selectedDate)} onSelectDay={(d)=>setSelectedDate(dateToISO(d))} />
+            <div className="card p-4 space-y-2">
+              <h3 className="font-semibold text-sm">Dentistas</h3>
+              {professionals.map(p=> <div key={p} className="text-sm border-l-4 border-blue-400 pl-2">{getProfessionalName(p)}</div>)}
+              <div className="text-blue-600 text-sm cursor-pointer mt-2" onClick={()=>alert('Adicionar Dentista não implementado neste mock.')}>Adicionar</div>
+            </div>
+          </div>
+
+          <div className="w-3/4 card overflow-x-auto p-3">
+            <div className="agenda-grid border-t border-l border-r border-b">
+              <div className="agenda-time text-left font-semibold text-sm">Hora</div>
+              {days.map(d => {
+                const isToday = dateToISO(d) === dateToISO(new Date());
+                return (
+                  <div key={dateToISO(d)} className={`agenda-header p-3 text-center text-sm ${isToday ? 'bg-indigo-100 text-indigo-800 font-bold' : 'text-gray-600'}`}>
+                    <div>{['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'][d.getDay()]}</div>
+                    <div className="text-xl font-bold">{d.getDate()}</div>
+                    <div className="tiny">{d.toLocaleString('pt-BR',{month:'short'})} {d.getFullYear()}</div>
+                  </div>
+                );
+              })}
+
+              {timeSlots.map((timeSlot, row) => (
+                <React.Fragment key={row}>
+                  <div className="agenda-time font-medium text-sm border-b">{timeSlot}</div>
+                  {days.map(d => {
+                    const iso = dateToISO(d);
+                    const ap = (db.appointments || []).find(a => a.date === iso && a.time === timeSlot);
+                    return (
+                      <div key={`${iso}-${timeSlot}`} className="agenda-cell border-b" onDoubleClick={()=>openNew(iso, timeSlot)}>
+                        {ap ? <AgendaEvent ap={ap} openEdit={()=>openEdit(ap)} /> : <div className="tiny text-gray-300"> </div>}
+                      </div>
+                    );
+                  })}
+                </React.Fragment>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        { showModal && <NovoAgendamentoModal professionals={professionals} initial={selectedAp} onClose={()=>setShowModal(false)} onSave={(data)=>{ if(selectedAp && selectedAp.id){ updateAppointment(selectedAp.id, data); } else { addAppointment(data); } setShowModal(false); }} /> }
+      </div>
+    );
+  }
+
+  function AgendaEvent({ ap, openEdit }){
+    const professional = getProfessionalName(ap.professional);
+    return (
+      <div className="agenda-event p-2 rounded shadow-sm cursor-pointer border-l-4 border-indigo-500 bg-indigo-50 hover:bg-indigo-100" onClick={openEdit}>
+        <div className="font-medium text-sm text-indigo-900">{ap.patient}</div>
+        <div className="tiny text-indigo-700">{ap.time} • {professional}</div>
+      </div>
+    );
+  }
+
+  /* MiniCalendar */
+  function MiniCalendar({ date, onSelectDay }){
+    const [month, setMonth] = useState(date.getMonth());
+    const [year, setYear] = useState(date.getFullYear());
+
+    useEffect(()=>{ setMonth(date.getMonth()); setYear(date.getFullYear()); }, [date]);
+
+    const firstDayOfMonth = new Date(year, month, 1);
+    const daysInMonth = new Date(year, month+1, 0).getDate();
+    const startDay = (firstDayOfMonth.getDay() + 6) % 7; // Monday = 0
+    const cells = [];
+    for(let i = startDay - 1; i >= 0; i--){ cells.push(new Date(year, month, -i)); }
+    for(let i=1;i<=daysInMonth;i++){ cells.push(new Date(year, month, i)); }
+    while(cells.length < 42) cells.push(new Date(year, month+1, cells.length - (startDay + daysInMonth) + 1));
+
+    function prevMonth(){ if(month === 0){ setMonth(11); setYear(year-1); } else setMonth(month-1); }
+    function nextMonth(){ if(month === 11){ setMonth(0); setYear(year+1); } else setMonth(month+1); }
+
+    const dateOnly = dateToISO(date);
+
+    return (
+      <div className="card p-4">
+        <div className="flex justify-between items-center mb-4">
+          <button className="text-gray-600" onClick={prevMonth}>&lt;</button>
+          <span className="font-semibold">{firstDayOfMonth.toLocaleString('pt-BR',{month:'long'})} {year}</span>
+          <button className="text-gray-600" onClick={nextMonth}>&gt;</button>
+        </div>
+
+        <div className="grid grid-cols-7 text-center tiny font-medium text-gray-500 mb-2">
+          <span>Seg</span><span>Ter</span><span>Qua</span><span>Qui</span><span>Sex</span><span>Sáb</span><span>Dom</span>
+        </div>
+
+        <div className="grid grid-cols-7 gap-1">
+          {cells.map((d,i) => {
+            const iso = dateToISO(d);
+            const isToday = iso === dateToISO(new Date());
+            const isSelected = iso === dateOnly;
+            const isCurrentMonth = d.getMonth() === month;
+            return (
+              <div key={i} className={`calendar-day p-2 text-center rounded ${isSelected ? 'bg-indigo-600 text-white font-semibold' : (isCurrentMonth ? 'current-month hover:bg-gray-100' : 'other-month text-gray-400') } ${isToday && !isSelected ? 'border border-indigo-300' : ''}`} onClick={()=>onSelectDay(d)}>
+                {d.getDate()}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+
+  /* NovoAgendamentoModal */
+  function NovoAgendamentoModal({ professionals = [], onClose, onSave, initial }){
+    const defaultPro = professionals.length ? professionals[0] : '';
+    const initForm = function(){
+      if(initial && initial.id) return { ...initial };
+      return {
+        date: (initial && initial.date) ? initial.date : dateToISO(new Date()),
+        time: (initial && initial.time) ? initial.time : '09:00',
+        patient: (initial && initial.patient) ? initial.patient : '',
+        phone: (initial && initial.phone) ? initial.phone : '',
+        treatment: (initial && initial.treatment) ? initial.treatment : '',
+        value: (initial && typeof initial.value !== 'undefined') ? initial.value : 0,
+        professional: (initial && initial.professional) ? initial.professional : defaultPro
+      };
+    };
+    const [form, setForm] = useState(initForm);
+    useEffect(()=>{ if(initial) setForm(prev => ({...prev, ...initial})); }, [initial]);
+
+    const submit = (e) => { e && e.preventDefault(); if(!form.patient) return alert('Informe o paciente'); onSave({...form}); };
+
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 p-4">
+        <div className="w-full max-w-xl card p-6">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-xl font-semibold">{ (initial && initial.id) ? 'Editar Agendamento' : 'Novo Agendamento' }</h3>
+            <button className="text-2xl" onClick={onClose} aria-label="Fechar">&times;</button>
+          </div>
+          <form onSubmit={submit} className="space-y-3">
+            <div className="grid grid-cols-2 gap-3">
+              <label className="block">Data
+                <input type="date" value={form.date} onChange={e=>setForm({...form, date:e.target.value})} className="w-full p-2 border rounded mt-1" />
+              </label>
+              <label className="block">Hora
+                <input type="time" value={form.time} onChange={e=>setForm({...form, time:e.target.value})} className="w-full p-2 border rounded mt-1" />
+              </label>
+            </div>
+
+            <label>Paciente
+              <input value={form.patient} onChange={e=>setForm({...form, patient:e.target.value})} className="w-full p-2 border rounded mt-1" placeholder="Nome do paciente" />
+            </label>
+
+            <div className="grid grid-cols-2 gap-3">
+              <label>Tel
+                <input value={form.phone} onChange={e=>setForm({...form, phone:e.target.value})} className="w-full p-2 border rounded mt-1" />
+              </label>
+              <label>Valor (R$)
+                <input type="number" value={form.value} onChange={e=>setForm({...form, value: e.target.value})} className="w-full p-2 border rounded mt-1" />
+              </label>
+            </div>
+
+            <label>Tratamento
+              <input value={form.treatment} onChange={e=>setForm({...form, treatment:e.target.value})} className="w-full p-2 border rounded mt-1" />
+            </label>
+
+            <label>Profissional
+              <select value={form.professional} onChange={e=>setForm({...form, professional:e.target.value})} className="w-full p-2 border rounded mt-1">
+                {professionals.map(p => <option key={p} value={p}>{ getProfessionalName(p) }</option>)}
+              </select>
+            </label>
+
+            <div className="flex justify-end gap-3 mt-4">
+              <button type="button" className="btn-ghost" onClick={onClose}>Cancelar</button>
+              <button type="submit" className="py-2 px-4 rounded bg-gradient-to-r from-blue-500 to-indigo-600 text-white">Agendar</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
+  /* Pacientes Page */
+  function PacientesPage({ db, addPatient }){
+    const [show, setShow] = useState(false);
+    const [query, setQuery] = useState('');
+    const patients = (db.patients || []).filter(p => (p.nome||'').toLowerCase().includes(query.toLowerCase()) || (p.cpf||'').includes(query) || (p.telefone||'').includes(query));
+
+    return (
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold">Pacientes</h1>
+            <p className="muted">{(db.patients||[]).length} pacientes cadastrados</p>
+          </div>
+          <div className="flex gap-2">
+            <button className="py-2 px-4 rounded bg-gradient-to-r from-blue-500 to-indigo-600 text-white" onClick={()=>setShow(true)}>+ Novo Paciente</button>
+          </div>
+        </div>
+
+        <div className="card p-4">
+          <input placeholder="Buscar por nome, CPF ou telefone..." value={query} onChange={e=>setQuery(e.target.value)} className="w-full p-3 border rounded" />
+          <div className="mt-4">
+            {patients.length===0 ? (
+              <div className="text-center muted py-8"><div className="mb-3">Nenhum paciente encontrado</div></div>
+            ) : (
+              <div className="space-y-3">
+                {patients.map(p => (
+                  <div key={p.id} className="p-3 border rounded flex justify-between">
+                    <div>
+                      <div className="font-medium">{p.nome}</div>
+                      <div className="tiny">{p.telefone} • {p.cpf}</div>
+                    </div>
+                    <div className="tiny">{p.lastVisit || ''}</div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        { show && <NovoPacienteModal onClose={()=>setShow(false)} onSave={(data)=>{ addPatient(data); setShow(false); }} /> }
+      </div>
+    );
+  }
+
+  function NovoPacienteModal({ onClose, onSave }){
+    const [form, setForm] = useState({ nome:'', cpf:'', telefone:'', email:'', dataNascimento:'', endereco:'', alergias:'', observacoes:'', creator:'local', createdAt:new Date().toISOString() });
+    const submit = (e) => { e && e.preventDefault(); if(!form.nome || !form.cpf) return alert('Preencha nome e CPF'); onSave(form); };
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 p-4">
+        <div className="w-full max-w-2xl card p-6 overflow-auto max-h-[85vh]">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-xl font-semibold">Novo Paciente</h3>
+            <button onClick={onClose} className="text-2xl" aria-label="Fechar">&times;</button>
+          </div>
+          <form onSubmit={submit} className="space-y-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <input placeholder="Nome completo" value={form.nome} onChange={e=>setForm({...form, nome:e.target.value})} className="p-2 border rounded" />
+              <input placeholder="CPF" value={form.cpf} onChange={e=>setForm({...form, cpf:e.target.value})} className="p-2 border rounded" />
+              <input placeholder="Telefone" value={form.telefone} onChange={e=>setForm({...form, telefone:e.target.value})} className="p-2 border rounded" />
+              <input placeholder="Email" value={form.email} onChange={e=>setForm({...form, email:e.target.value})} className="p-2 border rounded" />
+              <label className="block">Data de Nascimento
+                <input type="date" value={form.dataNascimento} onChange={e=>setForm({...form, dataNascimento:e.target.value})} className="w-full p-2 border rounded" />
+              </label>
+            </div>
+            <input placeholder="Endereço (Rua, Número, Bairro, Cidade)" value={form.endereco} onChange={e=>setForm({...form, endereco:e.target.value})} className="w-full p-2 border rounded" />
+            <textarea placeholder="Alergias / Histórico Clínico Relevante" value={form.alergias} onChange={e=>setForm({...form, alergias:e.target.value})} className="w-full p-2 border rounded h-20"></textarea>
+            <textarea placeholder="Observações Gerais" value={form.observacoes} onChange={e=>setForm({...form, observacoes:e.target.value})} className="w-full p-2 border rounded h-16"></textarea>
+            <div className="flex justify-end gap-3 pt-4">
+              <button type="button" className="btn-ghost" onClick={onClose}>Cancelar</button>
+              <button type="submit" className="py-2 px-4 rounded bg-gradient-to-r from-blue-500 to-indigo-600 text-white">Cadastrar Paciente</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
+  /* Financeiro - tabela conforme imagem */
+  function FinanceiroPage({ db, navigate }){
+    const appointments = db.appointments || [];
+    const totalReceived = appointments.filter(a => a.paid).reduce((s,a) => s + (Number(a.value)||0), 0);
+    const totalPending = appointments.filter(a => !a.paid).reduce((s,a) => s + (Number(a.value)||0), 0);
+    const total = totalReceived + totalPending;
+
+    return (
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold">Financeiro</h1>
+            <p className="muted">Resumo e faturas</p>
+          </div>
+          <div className="flex gap-2">
+            <button className="btn-outline" onClick={()=>navigate('dashboard')}>Voltar</button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="card p-6"><div className="tiny">Receita Total</div><div className="mt-2 font-bold text-2xl">{formatBR(total)}</div></div>
+          <div className="card p-6"><div className="tiny">Recebido</div><div className="mt-2 font-bold text-2xl text-green-600">{formatBR(totalReceived)}</div></div>
+          <div className="card p-6"><div className="tiny">Pendente</div><div className="mt-2 font-bold text-2xl text-red-600">{formatBR(totalPending)}</div></div>
+        </div>
+
+        <div className="card p-6">
+          <h2 className="text-xl font-semibold mb-4">Consultas</h2>
+          <div className="overflow-x-auto">
+            <table className="w-full table-auto">
+              <thead>
+                <tr className="text-sm text-gray-500">
+                  <th className="p-3 text-left">Data</th>
+                  <th className="p-3 text-left">Paciente</th>
+                  <th className="p-3 text-left">Dentista</th>
+                  <th className="p-3 text-right">Valor</th>
+                  <th className="p-3 text-center">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {appointments.length === 0 ? (
+                  <tr><td colSpan="5" className="text-center p-8 muted">Nenhuma consulta encontrada</td></tr>
+                ) : appointments.map(a => (
+                  <tr key={a.id} className="border-t hover:bg-gray-50 text-sm">
+                    <td className="p-3 tiny">{a.date}</td>
+                    <td className="p-3">{a.patient}</td>
+                    <td className="p-3 tiny">{getProfessionalName(a.professional)}</td>
+                    <td className="p-3 text-right font-semibold">{formatBR(a.value)}</td>
+                    <td className="p-3 text-center">
+                      <span className={`px-3 py-1 rounded text-sm ${a.paid ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-800'}`}>
+                        {a.paid ? 'Pago' : 'Pendente'}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  /* Relatórios (mantido simples) */
+  function RelatoriosPage({ db, navigate }){
+    const [selectedClients, setSelectedClients] = useState([]);
+    const [startDate, setStartDate] = useState('');
+    const [endDate, setEndDate] = useState('');
+    const [onlyUnpaid, setOnlyUnpaid] = useState(false);
+    const [search, setSearch] = useState('');
+    const [filtered, setFiltered] = useState(db.appointments || []);
+    const clients = Array.from(new Set((db.appointments || []).map(a => a.patient))).sort();
+
+    useEffect(()=> { setFiltered(db.appointments || []); }, [db.appointments]);
+
+    function toggleClient(name){ setSelectedClients(prev => prev.includes(name) ? prev.filter(x=>x!==name) : [...prev, name]); }
+    function clearClients(){ setSelectedClients([]); }
+    function applyFilters(){
+      let list = (db.appointments || []).slice();
+      if(selectedClients.length) list = list.filter(a => selectedClients.includes(a.patient));
+      if(startDate) list = list.filter(a => a.date >= startDate);
+      if(endDate) list = list.filter(a => a.date <= endDate);
+      if(onlyUnpaid) list = list.filter(a => !a.paid);
+      if(search){ const q = search.toLowerCase(); list = list.filter(a => (a.patient||'').toLowerCase().includes(q) || (a.date||'').includes(q) || (a.time||'').includes(q)); }
+      setFiltered(list);
+    }
+    function resetFilters(){ setSelectedClients([]); setStartDate(''); setEndDate(''); setOnlyUnpaid(false); setSearch(''); setFiltered(db.appointments || []); }
+
+    function sendWhatsApp(ap){ const phone = (ap.phone || '').replace(/\D/g,''); const text = encodeURIComponent(`Lembrete: consulta de ${ap.patient} em ${ap.date} às ${ap.time}.`); const wa = phone ? `https://wa.me/55${phone}?text=${text}` : `https://wa.me/?text=${text}`; window.open(wa, '_blank'); }
+    function sendEmail(ap){ const subject = encodeURIComponent('Lembrete de consulta'); const body = encodeURIComponent(`Lembrete:\nPaciente: ${ap.patient}\nData: ${ap.date} ${ap.time}\nProfissional: ${getProfessionalName(ap.professional)}\nTratamento: ${ap.treatment || '-'}`); window.location.href = `mailto:?subject=${subject}&body=${body}`; }
+    function exportCSV(){ const rows = [['Paciente','Data','Horário','Pago','Valor']]; filtered.forEach(a => rows.push([a.patient, a.date, a.time, a.paid ? 'Sim' : 'Não', (a.value || 0).toString()])); const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n'); const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' }); const url = URL.createObjectURL(blob); const link = document.createElement('a'); link.href = url; link.download = 'relatorio_agendamentos.csv'; link.click(); URL.revokeObjectURL(url); }
+
+    return (
+      <div className="space-y-6">
+        <div><h1 className="text-3xl font-bold">Relatórios</h1><p className="muted">Geração de Relatórios</p></div>
+
+        <div className="card p-4">
+          <div className="mb-3">
+            <div className="text-sm text-gray-600 mb-2">Clientes</div>
+            <div>
+              {clients.length === 0 ? <span className="tiny muted">Nenhum cliente disponível</span> :
+                clients.map(c => (
+                  <button key={c} onClick={()=>toggleClient(c)} className={`chip ${selectedClients.includes(c) ? 'bg-indigo-100 border border-indigo-200' : ''}`}>{c}{ selectedClients.includes(c) ? <span className="x" onClick={(e)=>{ e.stopPropagation(); toggleClient(c); }}>✕</span> : null }</button>
+                ))
+              }
+              {clients.length>0 && <button className="btn-ghost ml-2" onClick={clearClients}>Limpar</button>}
+            </div>
+          </div>
+
+          <div className="grid md:grid-cols-4 gap-3 mb-3">
+            <div><div className="text-sm text-gray-600">Data Inicial</div><input type="date" value={startDate} onChange={e=>setStartDate(e.target.value)} className="w-full p-2 border rounded mt-1" /></div>
+            <div><div className="text-sm text-gray-600">Data Final</div><input type="date" value={endDate} onChange={e=>setEndDate(e.target.value)} className="w-full p-2 border rounded mt-1" /></div>
+            <div className="flex items-end"><label className="inline-flex items-center gap-2"><input type="checkbox" checked={onlyUnpaid} onChange={e=>setOnlyUnpaid(e.target.checked)} /><span className="text-sm">Somente Não Pagos</span></label></div>
+            <div className="flex items-end justify-end gap-2"><button className="btn-primary" onClick={applyFilters}>VISUALIZAR</button><button className="btn-outline" onClick={()=>navigate('dashboard')}>VOLTAR</button></div>
+          </div>
+
+          <div className="mb-3 flex items-center gap-3">
+            <div className="flex-1"><input placeholder="Buscar (nome / data / horário)" value={search} onChange={e=>setSearch(e.target.value)} className="search-input" onKeyDown={(e)=>{ if(e.key==='Enter') applyFilters(); }} /></div>
+            <div className="flex gap-2"><button className="icon-btn" title="Exportar CSV" onClick={exportCSV}>🔎</button><button className="icon-btn" title="Limpar filtros" onClick={resetFilters}>✖ Limpar</button></div>
+          </div>
+
+          <div className="table-scroll border rounded">
+            <table className="min-w-full">
+              <thead className="bg-blue-50 sticky top-0">
+                <tr><th className="text-left px-3 py-2 tiny">Paciente</th><th className="text-left px-3 py-2 tiny">Dentista</th><th className="text-left px-3 py-2 tiny">Data</th><th className="text-left px-3 py-2 tiny">Horário</th><th className="text-left px-3 py-2 tiny">Serviço</th><th className="text-left px-3 py-2 tiny">Status</th><th className="text-right px-3 py-2 tiny">Valor</th></tr>
+              </thead>
+              <tbody>
+                {filtered.length === 0 ? (
+                  <tr><td colSpan="8" className="py-6 text-center muted">Nenhum agendamento encontrado para os filtros selecionados</td></tr>
+                ) : filtered.map(a => (
+                  <tr key={a.id} className="border-t">
+                    <td className="px-3 py-2">{a.patient}</td>
+                    <td className="px-3 py-2 tiny">{getProfessionalName(a.professional)}</td>
+                    <td className="px-3 py-2 tiny">{a.date}</td>
+                    <td className="px-3 py-2 tiny">{a.time}</td>
+                    <td className="px-3 py-2 tiny">{a.treatment || '-'}</td>
+                    <td className="px-3 py-2 tiny">{a.paid ? 'Pago' : 'Não Pago'}</td>
+                    <td className="px-3 py-2 text-right tiny">{formatBR(a.value)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+        </div>
+      </div>
+    );
+  }
+
+  function sendWhatsApp(ap){
+    const phone = (ap.phone || '').replace(/\D/g,'');
+    const text = encodeURIComponent(`Lembrete: consulta de ${ap.patient} em ${ap.date} às ${ap.time}.`);
+    const wa = phone ? `https://wa.me/55${phone}?text=${text}` : `https://wa.me/?text=${text}`;
+    window.open(wa, '_blank');
+  }
+  function sendEmail(ap){
+    const subject = encodeURIComponent('Lembrete de consulta');
+    const body = encodeURIComponent(`Lembrete:\nPaciente: ${ap.patient}\nData: ${ap.date} ${ap.time}\nProfissional: ${getProfessionalName(ap.professional)}\nTratamento: ${ap.treatment || '-'}`);
+    window.location.href = `mailto:?subject=${subject}&body=${body}`;
+  }
+
+  /* App mount */
+  ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
