@@ -67,66 +67,63 @@ MongoDB ou PostgreSQL
 ORGANIZAÇÃO DO CÓDIGO
 
 # backend/
-│
-├── controllers/
-│   ├── PacienteController.js
-│   ├── ConsultaController.js
-│   ├── UsuarioController.js
-│   └── PagamentoController.js
-│
-├── services/
-│   ├── PacienteService.js
-│   ├── ConsultaService.js
-│   ├── AuthService.js
-│   └── PagamentoService.js
-│
-├── repositories/
-│   ├── PacienteRepository.js
-│   ├── ConsultaRepository.js
-│   └── UsuarioRepository.js
-│
-├── models/
-│   ├── Paciente.js
-│   ├── Dentista.js
-│   ├── Usuario.js
-│   ├── Consulta.js
-│   ├── Prontuario.js
-│   └── Pagamento.js
-│
-├── routes/
-│   ├── pacienteRoutes.js
-│   ├── consultaRoutes.js
-│   └── authRoutes.js
-│
-├── config/
-│   └── database.js
-│
-└── app.js
+
+controllers/
+    PacienteController.js
+    ConsultaController.js
+    UsuarioController.js
+    PagamentoController.js
+
+services/
+    PacienteService.js
+    ConsultaService.js
+    AuthService.js
+    PagamentoService.js
+
+repositories/
+    PacienteRepository.js
+    ConsultaRepository.js
+    UsuarioRepository.js
+    
+models/
+    Paciente.js
+    Dentista.js
+    Usuario.js
+    Consulta.js
+    Prontuario.js
+    Pagamento.js
+
+routes/
+    pacienteRoutes.js
+    consultaRoutes.js
+    authRoutes.js
+
+config/
+    database.js
+    app.js
 
 # frontend/
-│
-├── pages/
-│   ├── login.html
-│   ├── dashboard.html
-│   ├── pacientes.html
-│   ├── consultas.html
-│   └── financeiro.html
-│
-├── components/
-│   ├── navbar.js
-│   ├── formularioPaciente.js
-│   └── tabelaConsultas.js
-│
-├── services/
-│   ├── api.js
-│   ├── pacienteService.js
-│   └── consultaService.js
-│
-├── assets/
-│   ├── css/
-│   └── imagens/
-│
-└── index.html
+pages/
+    login.html
+    dashboard.html
+    pacientes.html
+    consultas.html
+    financeiro.html
+
+components/
+    navbar.js
+    formularioPaciente.js
+    tabelaConsultas.js
+
+services/
+    api.js
+    pacienteService.js
+    consultaService.js
+
+assets/
+    css/
+    imagens/
+    index.html
 
 INSTRUÇÕES PARA EXECUÇÃO (README)
 # Back-end
