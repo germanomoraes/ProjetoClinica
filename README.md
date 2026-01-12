@@ -68,7 +68,7 @@ MongoDB ou PostgreSQL
 
 # backend/   
 
-├── controllers/
+── controllers/
 
   ├── PacienteController.js
 
@@ -80,7 +80,7 @@ MongoDB ou PostgreSQL
 
 
 
-├── services/
+── services/
 
   ├── PacienteService.js
 
@@ -92,7 +92,7 @@ MongoDB ou PostgreSQL
 
 
 
-├── repositories/
+── repositories/
 
   ├── PacienteRepository.js
 
@@ -102,7 +102,7 @@ MongoDB ou PostgreSQL
 
 
 
-├── models/
+── models/
 
   ├── Paciente.js
 
@@ -118,7 +118,7 @@ MongoDB ou PostgreSQL
 
 
 
-├── routes/
+── routes/
 
   ├── pacienteRoutes.js
 
@@ -128,7 +128,7 @@ MongoDB ou PostgreSQL
 
 
 
-├── config/
+── config/
 
   └── database.js
 
@@ -140,7 +140,7 @@ MongoDB ou PostgreSQL
 
 
 
-├── pages/
+── pages/
 
   ├── login.html
 
@@ -154,7 +154,7 @@ MongoDB ou PostgreSQL
 
 
 
-├── components/
+── components/
 
   ├── navbar.js
 
@@ -164,7 +164,7 @@ MongoDB ou PostgreSQL
 
 
 
-├── services/
+── services/
 
   ├── api.js
 
@@ -174,7 +174,7 @@ MongoDB ou PostgreSQL
 
 
 
-├── assets/
+── assets/
 
   ├── css/
 
