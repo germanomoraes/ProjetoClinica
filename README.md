@@ -78,6 +78,8 @@ MongoDB ou PostgreSQL
 
 └── PagamentoController.js
 
+
+
 ├── services/
 
 ├── PacienteService.js
@@ -88,6 +90,8 @@ MongoDB ou PostgreSQL
 
 └── PagamentoService.js
 
+
+
 ├── repositories/
 
 ├── PacienteRepository.js
@@ -95,6 +99,7 @@ MongoDB ou PostgreSQL
 ├── ConsultaRepository.js
 
 └── UsuarioRepository.js
+
 
 
 ├── models/
@@ -112,6 +117,7 @@ MongoDB ou PostgreSQL
 └── Pagamento.js
 
 
+
 ├── routes/
 
 ├── pacienteRoutes.js
@@ -121,13 +127,18 @@ MongoDB ou PostgreSQL
 └── authRoutes.js
 
 
+
 ├── config/
 
 └── database.js
 
 └── app.js
 
+
+
 # frontend/
+
+
 
 ├── pages/
 
@@ -142,6 +153,7 @@ MongoDB ou PostgreSQL
 └── financeiro.html
 
 
+
 ├── components/
 
 ├── navbar.js
@@ -151,6 +163,7 @@ MongoDB ou PostgreSQL
 └── tabelaConsultas.js
 
 
+
 ├── services/
 
 ├── api.js
@@ -158,6 +171,7 @@ MongoDB ou PostgreSQL
 ├── pacienteService.js
 
 └── consultaService.js
+
 
 
 ├── assets/
