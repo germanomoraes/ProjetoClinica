@@ -157,5 +157,8 @@ Nota: O frontend usa fetch para consumir a API. Certifique-se de que o backend e
 
 # AUTORES
 Germano de Oliveira Moraes
+
 Curso: Análise e Desenvolvimento de Sistemas
+
 IFCE – Campus Boa Viagem
+
