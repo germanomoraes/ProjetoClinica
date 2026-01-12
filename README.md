@@ -66,7 +66,7 @@ MongoDB ou PostgreSQL
 
 # ORGANIZAÇÃO DO CÓDIGO
 
-backend/   
+# backend/   
 
 ├── controllers/
 ├── PacienteController.js
@@ -97,11 +97,12 @@ backend/
 ├── pacienteRoutes.js
 ├── consultaRoutes.js
 └── authRoutes.js
+
 ├── config/
 └── database.js
 └── app.js
 
-frontend/
+# frontend/
 
 ├── pages/
 ├── login.html
@@ -126,7 +127,6 @@ frontend/
 └── index.html
 
 └── README.md
-
 
 
 # INSTRUÇÕES PARA EXECUÇÃO (README)
