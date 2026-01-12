@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title> 🦷 OdontoWise - Login</title>
+  <link rel="stylesheet" href="./assets/css/styles.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState } = React;
+
+    function LoginPage({ onLogin }){
+      const [username,setUsername] = useState('dentista1');
+      const [password,setPassword] = useState('1234');
+      const [loading, setLoading] = useState(false);
+
+      const submit = async (e) => {
+        e && e.preventDefault();
+        setLoading(true);
+        try {
+          const response = await fetch('/api/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+          });
+          if (response.ok) {
+            const data = await response.json();
+            localStorage.setItem('token', data.token);
+            localStorage.setItem('user', JSON.stringify(data.user));
+            window.location.href = 'index.html'; // Redirecionar para dashboard
+          } else {
+            alert('Usuário ou senha inválidos');
+          }
+        } catch (error) {
+          alert('Erro no login: ' + error.message);
+        }
+        setLoading(false);
+      };
+
+      return (
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="w-full max-w-md card p-8">
+            <div className="flex flex-col items-center">
+              <div className="logo-badge mb-4">🦷</div>
+              <h1 className="text-2xl font-bold"> OdontoWise </h1>
+              <p className="muted mb-6">Sistema de Gestão Odontológica</p>
+            </div>
+            <form onSubmit={submit} className="space-y-4">
+              <input value={username} onChange={e=>setUsername(e.target.value)} placeholder="usuário" className="w-full p-3 border rounded" />
+              <input value={password} onChange={e=>setPassword(e.target.value)} type="password" placeholder="senha" className="w-full p-3 border rounded" />
+              <div className="flex justify-between items-center">
+                <button type="submit" disabled={loading} className="py-2 px-4 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded">
+                  {loading ? 'Entrando...' : 'Entrar no Sistema'}
+                </button>
+                <button type="button" className="btn-ghost" onClick={()=>{ setUsername('dentista1'); setPassword('1234'); }}></button>
+              </div>
+            </form>
+            <p className="tiny mt-4">Usuários de teste: dentista1 / dentista2 / dentista3 / secretaria (senha 1234)</p>
+          </div>
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<LoginPage />);
+  </script>
+</body>
+</html>

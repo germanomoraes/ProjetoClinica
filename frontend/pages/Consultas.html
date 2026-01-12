@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title> 🦷 OdontoWise - Consultas</title>
+  <link rel="stylesheet" href="../assets/css/styles.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    function ConsultasPage(){
+      const [consultas, setConsultas] = useState([]);
+      const [showModal, setShowModal] = useState(false);
+
+      useEffect(() => {
+        loadConsultas();
+      }, []);
+
+      const loadConsultas = async () => {
+        try {
+          const data = await fetch('/api/consultas').then(r => r.json());
+          setConsultas(data);
+        } catch (error) {
+          alert('Erro ao carregar consultas: ' + error.message);
+        }
+      };
+
+      const onSave = () => {
+        loadConsultas();
+        setShowModal(false);
+      };
+
+      return (
+        <div className="space-y-6">
+          <div className="flex justify-between items-center">
+            <h1 className="text-3xl font-bold">Consultas</h1>
+            <button className="py-2 px-4 rounded bg-gradient-to-r from-blue-500 to-indigo-600 text-white" onClick={()=>setShowModal(true)}>+ Nova Consulta</button>
+          </div>
+
+          <TabelaConsultas consultas={consultas} onEdit={(c) => alert('Editar não implementado')} onDelete={async (id) => {
+            if (confirm('Excluir consulta?')) {
+              await fetch(`/api/consultas/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+              loadConsultas();
+            }
+          }} />
+
+          { showModal && <NovoAgendamentoModal onClose={()=>setShowModal(false)} onSave={onSave} /> }
+        </div>
+      );
+    }
+
+    function TabelaConsultas({ consultas, onEdit, onDelete }) {
+      return (
+        <div className="overflow-x-auto">
+          <table className="w-full table-auto">
+            <thead>
+              <tr className="text-sm text-gray-500">
+                <th className="p-3 text-left">Data</th>
+                <th className="p-3 text-left">Paciente</th>
+                <th className="p-3 text-left">Dentista</th>
+                <th className="p-3 text-right">Valor</th>
+                <th className="p-3 text-center">Status</th>
+                <th className="p-3 text-center">Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              {consultas.length === 0 ? (
+                <tr><td colSpan="6" className="text-center p-8 muted">Nenhuma consulta encontrada</td></tr>
+              ) : consultas.map(a => (
+                <tr key={a.id} className="border-t hover:bg-gray-50 text-sm">
+                  <td className="p-3 tiny">{a.date}</td>
+                  <td className="p-3">{a.patient}</td>
+                  <td className="p-3 tiny">{a.professional}</td>
+                  <td className="p-3 text-right font-semibold">{a.value ? `R$ ${a.value.toFixed(2)}` : '-'}</td>
+                  <td className="p-3 text-center">
+                    <span className={`px-3 py-1 rounded text-sm ${a.paid ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-800'}`}>
+                      {a.paid ? 'Pago' : 'Pendente'}
+                    </span>
+                  </td>
+                  <td className="p-3 text-center">
+                    <button onClick={() => onEdit(a)} className="text-blue-600 mr-2">Editar</button>
+                    <button onClick={() => onDelete(a.id)} className="text-red-600">Excluir</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      );
+    }
+
+    function NovoAgendamentoModal({ onClose, onSave }){
+      const [form, setForm] = useState({ date: new Date().toISOString().slice(0,10), time: '09:00', patient: '', phone: '', treatment: '', value: 0, professional: 'dentista1' });
+
+      const submit = async (e) => {
+        e.preventDefault();
+        try {
+          await fetch('/api/consultas', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('token')}` },
+            body: JSON.stringify(form)
+          });
+          onSave();
+        } catch (error) {
+          alert('Erro ao agendar: ' + error.message);
+        }
+      };
+
+      return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 p-4">
+          <div className="w-full max-w-xl card p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-semibold">Novo Agendamento</h3>
+              <button className="text-2xl" onClick={onClose}>&times;</button>
+            </div>
+            <form onSubmit={submit} className="space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <input type="date" value={form.date} onChange={e=>setForm({...form, date:e.target.value})} className="p-2 border rounded" />
+                <input type="time" value={form.time} onChange={e=>setForm({...form, time:e.target.value})} className="p-2 border rounded" />
+              </div>
+              <input value={form.patient} onChange={e=>setForm({...form, patient:e.target.value})} placeholder="Paciente" className="w-full p-2 border rounded" />
+              <input value={form.phone} onChange={e=>setForm({...form, phone:e.target.value})} placeholder="Telefone" className="w-full p-2 border rounded" />
+              <input value={form.treatment} onChange={e=>setForm({...form, treatment:e.target.value})} placeholder="Tratamento" className="w-full p-2 border rounded" />
+              <input type="number" value={form.value} onChange={e=>setForm({...form, value: parseFloat(e.target.value)})} placeholder="Valor" className="w-full p-2 border rounded" />
+              <select value={form.professional} onChange={e=>setForm({...form, professional:e.target.value})} className="w-full p-2 border rounded">
+                <option value="dentista1">Dentista 1</option>
+                <option value="dentista2">Dentista 2</option>
+              </select>
+              <div className="flex justify-end gap-3">
+                <button type="button" className="btn-ghost" onClick={onClose}>Cancelar</button>
+                <button type="submit" className="py-2 px-4 rounded bg-gradient-to-r from-blue-500 to-indigo-600 text-white">Agendar</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<ConsultasPage />);
+  </script>
+</body>
+</html>

@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title> 🦷 OdontoWise - Pacientes</title>
+  <link rel="stylesheet" href="../assets/css/styles.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    function PacientesPage(){
+      const [show, setShow] = useState(false);
+      const [query, setQuery] = useState('');
+      const [pacientes, setPacientes] = useState([]);
+
+      useEffect(() => {
+        loadPacientes();
+      }, []);
+
+      const loadPacientes = async () => {
+        try {
+          const data = await fetch('/api/pacientes').then(r => r.json());
+          setPacientes(data);
+        } catch (error) {
+          alert('Erro ao carregar pacientes: ' + error.message);
+        }
+      };
+
+      const filtered = pacientes.filter(p => 
+        (p.nome || '').toLowerCase().includes(query.toLowerCase()) || 
+        (p.cpf || '').includes(query) || 
+        (p.telefone || '').includes(query)
+      );
+
+      return (
+        <div className="space-y-6">
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className="text-3xl font-bold">Pacientes</h1>
+              <p className="muted">{pacientes.length} pacientes cadastrados</p>
+            </div>
+            <div className="flex gap-2">
+              <button className="py-2 px-4 rounded bg-gradient-to-r from-blue-500 to-indigo-600 text-white" onClick={()=>setShow(true)}>+ Novo Paciente</button>
+            </div>
+          </div>
+
+          <div className="card p-4">
+            <input placeholder="Buscar por nome, CPF ou telefone..." value={query} onChange={e=>setQuery(e.target.value)} className="w-full p-3 border rounded" />
+            <div className="mt-4">
+              {filtered.length===0 ? (
+                <div className="text-center muted py-8"><div className="mb-3">Nenhum paciente encontrado</div></div>
+              ) : (
+                <div className="space-y-3">
+                  {filtered.map(p => (
+                    <div key={p.id} className="p-3 border rounded flex justify-between">
+                      <div>
+                        <div className="font-medium">{p.nome}</div>
+                        <div className="tiny">{p.telefone} • {p.cpf}</div>
+                      </div>
+                      <div className="tiny">{p.lastVisit || ''}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          { show && <FormPaciente onClose={()=>setShow(false)} onSave={loadPacientes} /> }
+        </div>
+      );
+    }
+
+    // Incluir FormPaciente aqui ou importar
+    function FormPaciente({ onClose, onSave }) {
+      const [form, setForm] = useState({ nome:'', cpf:'', telefone:'', email:'', dataNascimento:'', endereco:'', alergias:'', observacoes:'' });
+      const submit = async (e) => {
+        e.preventDefault();
+        if (!form.nome || !form.cpf) return alert('Preencha nome e CPF');
+        try {
+          await fetch('/api/pacientes', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('token')}` },
+            body: JSON.stringify(form)
+          });
+          onSave();
+          onClose();
+        } catch (error) {
+          alert('Erro ao cadastrar paciente: ' + error.message);
+        }
+      };
+      return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 p-4">
+          <div className="w-full max-w-2xl card p-6 overflow-auto max-h-[85vh]">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-semibold">Novo Paciente</h3>
+              <button onClick={onClose} className="text-2xl" aria-label="Fechar">&times;</button>
+            </div>
+            <form onSubmit={submit} className="space-y-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <input placeholder="Nome completo" value={form.nome} onChange={e=>setForm({...form, nome:e.target.value})} className="p-2 border rounded" />
+                <input placeholder="CPF" value={form.cpf} onChange={e=>setForm({...form, cpf:e.target.value})} className="p-2 border rounded" />
+                <input placeholder="Telefone" value={form.telefone} onChange={e=>setForm({...form, telefone:e.target.value})} className="p-2 border rounded" />
+                <input placeholder="Email" value={form.email} onChange={e=>setForm({...form, email:e.target.value})} className="p-2 border rounded" />
+                <label className="block">Data de Nascimento
+                  <input type="date" value={form.dataNascimento} onChange={e=>setForm({...form, dataNascimento:e.target.value})} className="w-full p-2 border rounded" />
+                </label>
+              </div>
+              <input placeholder="Endereço" value={form.endereco} onChange={e=>setForm({...form, endereco:e.target.value})} className="w-full p-2 border rounded" />
+              <textarea placeholder="Alergias" value={form.alergias} onChange={e=>setForm({...form, alergias:e.target.value})} className="w-full p-2 border rounded h-20"></textarea>
+              <textarea placeholder="Observações" value={form.observacoes} onChange={e=>setForm({...form, observacoes:e.target.value})} className="w-full p-2 border rounded h-16"></textarea>
+              <div className="flex justify-end gap-3 pt-4">
+                <button type="button" className="btn-ghost" onClick={onClose}>Cancelar</button>
+                <button type="submit" className="py-2 px-4 rounded bg-gradient-to-r from-blue-500 to-indigo-600 text-white">Cadastrar</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<PacientesPage />);
+  </script>
+</body>
+</html>
