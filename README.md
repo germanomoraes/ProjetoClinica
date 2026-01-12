@@ -70,69 +70,69 @@ MongoDB ou PostgreSQL
 
 ├── controllers/
 
-├── PacienteController.js
+  ├── PacienteController.js
 
-├── ConsultaController.js
+  ├── ConsultaController.js
 
-├── UsuarioController.js
+  ├── UsuarioController.js
 
-└── PagamentoController.js
+  └── PagamentoController.js
 
 
 
 ├── services/
 
-├── PacienteService.js
+  ├── PacienteService.js
 
-├── ConsultaService.js
+  ├── ConsultaService.js
 
-├── AuthService.js
+  ├── AuthService.js
 
-└── PagamentoService.js
+  └── PagamentoService.js
 
 
 
 ├── repositories/
 
-├── PacienteRepository.js
+  ├── PacienteRepository.js
 
-├── ConsultaRepository.js
+  ├── ConsultaRepository.js
 
-└── UsuarioRepository.js
+  └── UsuarioRepository.js
 
 
 
 ├── models/
 
-├── Paciente.js
+  ├── Paciente.js
 
-├── Dentista.js
+  ├── Dentista.js
 
-├── Usuario.js
+  ├── Usuario.js
 
-├── Consulta.js
+  ├── Consulta.js
 
-├── Prontuario.js
+  ├── Prontuario.js
 
-└── Pagamento.js
+  └── Pagamento.js
 
 
 
 ├── routes/
 
-├── pacienteRoutes.js
+  ├── pacienteRoutes.js
 
-├── consultaRoutes.js
+  ├── consultaRoutes.js
 
-└── authRoutes.js
+  └── authRoutes.js
 
 
 
 ├── config/
 
-└── database.js
+  └── database.js
 
-└── app.js
+  └── app.js
 
 
 
@@ -142,48 +142,48 @@ MongoDB ou PostgreSQL
 
 ├── pages/
 
-├── login.html
+  ├── login.html
 
-├── dashboard.html
+  ├── dashboard.html
 
-├── pacientes.html
+  ├── pacientes.html
 
-├── consultas.html
+  ├── consultas.html
 
-└── financeiro.html
+  └── financeiro.html
 
 
 
 ├── components/
 
-├── navbar.js
+  ├── navbar.js
 
-├── formularioPaciente.js
+  ├── formularioPaciente.js
 
-└── tabelaConsultas.js
+  └── tabelaConsultas.js
 
 
 
 ├── services/
 
-├── api.js
+  ├── api.js
 
-├── pacienteService.js
+  ├── pacienteService.js
 
-└── consultaService.js
+  └── consultaService.js
 
 
 
 ├── assets/
 
-├── css/
+  ├── css/
 
-└── imagens/
+  └── imagens/
 
-└── index.html
+  └── index.html
 
 
-└── README.md
+  └── README.md
 
 
 # INSTRUÇÕES PARA EXECUÇÃO (README)
