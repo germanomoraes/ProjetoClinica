@@ -10,6 +10,7 @@ O sistema foi projetado com base nos requisitos levantados em uma entrevista sim
 
 # Requisitos Funcionais
 
+```
 RF01 – Cadastrar, editar e excluir pacientes
 RF02 – Gerenciar prontuários odontológicos
 RF03 – Agendar, editar e cancelar consultas
@@ -17,6 +18,8 @@ RF04 – Controlar pagamentos das consultas
 RF05 – Autenticar usuários com níveis de acesso
 RF06 – Listar consultas por data e profissional
 
+```
+```
 # Requisitos Não Funcionais
 
 RNF01 – O sistema deve utilizar arquitetura em camadas
@@ -25,6 +28,7 @@ RNF03 – Interface responsiva e intuitiva
 RNF04 – Controle de acesso por perfil de usuário
 RNF05 – Código organizado e documentado
 
+```
 # Arquitetura Adotada
 
 Arquitetura em Camadas: A arquitetura foi escolhida para facilitar manutenção, evolução do sistema e reaproveitamento de código.
@@ -161,5 +165,6 @@ Germano de Oliveira Moraes
 Curso: Análise e Desenvolvimento de Sistemas
 
 IFCE – Campus Boa Viagem
+
 
 
