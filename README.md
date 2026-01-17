@@ -3,7 +3,7 @@
 # DESCRIÇÃO GERAL DO SISTEMA 
 OdontoWise – Sistema de Gestão Odontológica
 
-O OdontoWise é um sistema web desenvolvido em sistema monolitico e em camadas, com o objetivo para auxiliar na gestão de clínicas odontológicas, permitindo o controle de pacientes, dentistas, consultas, prontuários e pagamentos.
+O OdontoWise é um sistema web desenvolvido em dois tipos de um sistema. O monolitico e em camadas, com o objetivo para auxiliar na gestão de clínicas odontológicas, permitindo o controle de pacientes, dentistas, consultas, prontuários e pagamentos.
 O sistema foi projetado com base nos requisitos levantados em uma entrevista simulada com o gestor da clínica, adotando uma Arquitetura de Software em Camadas, evitando soluções monolíticas e garantindo separação de responsabilidades, baixo acoplamento e alta coesão.
 
 # REQUISITOS DO SISTEMA
