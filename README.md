@@ -125,7 +125,7 @@ backend/
 
 ## Frontend
 
-Estrutura organizada:
+Estrutura das pastas organizada:
 
 ```
 frontend/
@@ -165,6 +165,7 @@ Germano de Oliveira Moraes
 Curso: Análise e Desenvolvimento de Sistemas
 
 IFCE – Campus Boa Viagem
+
 
 
 
