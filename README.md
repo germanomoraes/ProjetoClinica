@@ -37,7 +37,7 @@ Arquitetura em Camadas: A arquitetura foi escolhida para facilitar manutenção,
 
 # JUSTIFICATIVA DA ARQUITETURA
 
-A utilização da Arquitetura em Camadas permite a separação clara das responsabilidades do sistema, evitando o acoplamento excessivo entre interface, regras de negócio e acesso a dados. Essa abordagem facilita a manutenção, a escalabilidade e a evolução do software, além de melhorar a organização e a qualidade do código.
+A utilização da Arquitetura em Camadas permite a separação clara das responsabilidades do sistema, evitando o acoplamento excessivo entre interface, inclundo as regras de negócio e acesso a dados. Essa abordagem facilita a manutenção, a escalabilidade e a evolução do software, além de melhorar a organização e a qualidade do código.
 
 # Camadas do Sistema
 
@@ -165,6 +165,7 @@ Germano de Oliveira Moraes
 Curso: Análise e Desenvolvimento de Sistemas
 
 IFCE – Campus Boa Viagem
+
 
 
 
