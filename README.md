@@ -76,9 +76,7 @@ Este projeto foi reestruturado em camadas para melhor organização e manutenç�
 
 ```
 
-# Estrutura das pastas 
-
-## Estrutura do Backend
+# Estrutura das pastas do Backend
 
 ```
 backend/
@@ -170,6 +168,7 @@ Germano de Oliveira Moraes
 Curso: Análise e Desenvolvimento de Sistemas
 
 IFCE – Campus Boa Viagem
+
 
 
 
