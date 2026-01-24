@@ -8,9 +8,9 @@ O sistema foi projetado com base nos requisitos levantados em uma entrevista sim
 
 # REQUISITOS DO SISTEMA
 
+```
 # Requisitos Funcionais
 
-```
 RF01 – Cadastrar, editar e excluir pacientes
 RF02 – Gerenciar prontuários odontológicos
 RF03 – Agendar, editar e cancelar consultas
@@ -41,6 +41,7 @@ A utilização da Arquitetura em Camadas permite a separação clara das respons
 
 # Camadas do Sistema
 
+``` 
 Camada de Apresentação (Front-end)
 
 - Interface gráfica
@@ -49,8 +50,10 @@ Camada de Apresentação (Front-end)
 
   Tecnologias:
   HTML, CSS, JavaScript
-
+```
+```
 Camada de Aplicação / Negócio (Back-end)
+
 
 - Regras de negócio
   Validações
@@ -70,6 +73,8 @@ Camada de Aplicação / Negócio (Back-end)
   MongoDB ou PostgreSQL
 
 Este projeto foi reestruturado em camadas para melhor organização e manutenção.
+
+```
 
 # Estrutura das pastas 
 
@@ -165,6 +170,7 @@ Germano de Oliveira Moraes
 Curso: Análise e Desenvolvimento de Sistemas
 
 IFCE – Campus Boa Viagem
+
 
 
 
