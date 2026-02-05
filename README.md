@@ -8,7 +8,7 @@ O sistema foi projetado com base nos requisitos levantados em uma entrevista sim
 
 # REQUISITOS DO SISTEMA
 
-```
+``````
 # Requisitos Funcionais
 
 RF01 – Cadastrar, editar e excluir pacientes
@@ -168,6 +168,7 @@ Germano de Oliveira Moraes
 Curso: Análise e Desenvolvimento de Sistemas
 
 IFCE – Campus Boa Viagem
+
 
 
 
