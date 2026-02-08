@@ -79,7 +79,7 @@ npm run dev
 
 O frontend rodará em: **http://localhost:3000**
 
-## 🔐 Login Padrão
+## Login Padrão
 
 | Usuário | Senha | Papel |
 |---------|-------|-------|
@@ -88,7 +88,7 @@ O frontend rodará em: **http://localhost:3000**
 | dentista3 | 1234 | Dentista |
 | secretaria | 1234 | Secretária |
 
-## 📚 API Endpoints
+## API Endpoints
 
 ### Autenticação
 - `POST /api/auth/login` - Login do usuário
@@ -107,7 +107,7 @@ O frontend rodará em: **http://localhost:3000**
 - `PUT /api/appointments/:id` - Atualizar agendamento
 - `DELETE /api/appointments/:id` - Deletar agendamento
 
-## 📦 Banco de Dados
+## Banco de Dados
 
 O sistema usa **SQLite** para persistência de dados. O arquivo `odontowise.db` é criado automaticamente na primeira execução no diretório `backend/`.
 
@@ -116,7 +116,7 @@ O sistema usa **SQLite** para persistência de dados. O arquivo `odontowise.db` 
 - **patients** - Dados dos pacientes
 - **appointments** - Agendamentos e consultas
 
-## 🛠️ Tecnologias
+## Tecnologias
 
 ### Backend
 - Express.js - Framework web
@@ -129,13 +129,13 @@ O sistema usa **SQLite** para persistência de dados. O arquivo `odontowise.db` 
 - Axios - Cliente HTTP
 - Tailwind CSS - Estilos
 
-## 📝 Notas Importantes
+## Notas Importantes
 
 1. **Dados são persistidos** no SQLite (`backend/odontowise.db`)
 2. **CORS está habilitado** para desenvolvimento
 3. O frontend faz proxy das requisições da API através do Vite
 
-## 🐛 Troubleshooting
+## Troubleshooting
 
 ### Erro de conexão no frontend
 - Verifique se o backend está rodando em `http://localhost:5000`
@@ -151,7 +151,7 @@ npm install
 ### Banco de dados corrompido
 - Delete `backend/odontowise.db` e reinicie o backend
 
-## 📄 Estrutura de Componentes React
+## Estrutura de Componentes React
 
 - **LoginPage** - Autenticação
 - **DashboardPage** - Visão geral
@@ -162,7 +162,7 @@ npm install
 - **Topbar** - Barra de navegação
 - **shared.jsx** - Componentes reutilizáveis
 
-## 🎨 Customização
+## Customização
 
 ### Portas
 - Backend: Modificar em `backend/src/index.js` (linha com `PORT`)
@@ -172,7 +172,7 @@ npm install
 - Usando Tailwind CSS via CDN
 - Arquivo customizado: `frontend/src/index.css`
 
-## 📞 Suporte
+## Suporte
 
 Para dúvidas sobre a implementação, verifique:
 - Logs do backend no terminal
@@ -181,4 +181,5 @@ Para dúvidas sobre a implementação, verifique:
 
 ---
 
-**OdontoWise v1.0.0** 🦷
+**OdontoWise v1.0.0** 
+
