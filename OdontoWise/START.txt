@@ -1,0 +1,79 @@
+# 🚀 QUICK START
+
+## ⚡ Rodar em 5 Minutos
+
+### **Windows - Método Mais Fácil**
+
+1. **Abra o Explorador:**
+   - Vá para: `c:\Users\Germano Moraes\OneDrive\Área de Trabalho\OdontoWise`
+
+2. **Clique duplo em:**
+   - `setup.bat`
+
+3. **Aguarde a instalação** (pode levar 2-3 minutos)
+
+4. **Siga as instruções que aparecerem nos 2 terminais**
+
+5. **Abra no navegador:**
+   - http://localhost:3000
+
+---
+
+### **Ou Manual em 2 Terminais**
+
+**Terminal 1 - Backend:**
+```
+cd "c:\Users\Germano Moraes\OneDrive\Área de Trabalho\OdontoWise\backend"
+npm install
+npm run dev
+```
+
+**Terminal 2 - Frontend:**
+```
+cd "c:\Users\Germano Moraes\OneDrive\Área de Trabalho\OdontoWise\frontend"
+npm install
+npm run dev
+```
+
+**Browser:**
+```
+http://localhost:3000
+```
+
+---
+
+## 🔐 Faça Login com:
+
+```
+Usuário: dentista1
+Senha:   1234
+```
+
+---
+
+## ✅ Pronto! 
+
+Você verá o Dashboard completo com:
+- 📊 Estatísticas
+- 📅 Agenda
+- 👥 Pacientes
+- 💰 Financeiro
+- 📈 Relatórios
+
+---
+
+## 🆘 Problema?
+
+Se der erro de `npm`:
+1. Feche todos os terminais
+2. Abra um novo Terminal como **Administrador**
+3. Tente novamente
+
+Se ainda não funcionar, use **cmd.exe** ao invés de PowerShell:
+```
+C:\Windows\System32\cmd.exe
+```
+
+---
+
+**Tudo pronto! Divirta-se! 🦷**
