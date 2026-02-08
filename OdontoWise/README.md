@@ -2,7 +2,7 @@
 
 Um sistema web de gestão para clínicas odontológicas, desenvolvido com **Node.js + Express** no backend e **React** no frontend, organizado em camadas.
 
-## 📋 Características
+## Características
 
 - ✅ **Autenticação** de usuários (Dentistas e Secretários)
 - ✅ **Gestão de Pacientes** (CRUD completo)
@@ -12,7 +12,7 @@ Um sistema web de gestão para clínicas odontológicas, desenvolvido com **Node
 - ✅ **Dashboard** com estatísticas
 - ✅ **Banco de Dados SQLite** persistente
 
-## 🏗️ Arquitetura em Camadas
+## Arquitetura feita em Camadas
 
 ```
 OdontoWise/
@@ -39,7 +39,7 @@ OdontoWise/
     └── package.json
 ```
 
-## 🚀 Como Rodar
+## Como Rodar
 
 ### Pré-requisitos
 - **Node.js** v16+ instalado
@@ -181,5 +181,6 @@ Para dúvidas sobre a implementação, verifique:
 
 ---
 
-**OdontoWise v1.0.0** 
+**OdontoWi se 🦷 first version v1.0.0** 
+
 
