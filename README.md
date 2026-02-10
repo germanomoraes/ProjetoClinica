@@ -20,7 +20,7 @@ RF06 – Listar consultas por data e profissional
 
 ```
 ```
-# Requisitos Não Funcionais atualizar de novo o readme 
+# Requisitos Não Funcionais 
 
 RNF01 – O sistema deve utilizar arquitetura em camadas
 RNF02 – Comunicação via API REST
@@ -168,6 +168,7 @@ Germano de Oliveira Moraes
 Curso: Análise e Desenvolvimento de Sistemas
 
 IFCE – Campus Boa Viagem
+
 
 
 
