@@ -1,4 +1,4 @@
-# Sistema de Gestão Odontológica - OdontoWise dd
+# Sistema de Gestão Odontológica - OdontoWise ddad
 
 # DESCRIÇÃO GERAL DO SISTEMA 
 OdontoWise – Sistema de Gestão Odontológica
@@ -168,6 +168,7 @@ Germano de Oliveira Moraes
 Curso: Análise e Desenvolvimento de Sistemas
 
 IFCE – Campus Boa Viagem
+
 
 
 
